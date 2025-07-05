@@ -1542,12 +1542,6 @@ impl<T: Read + Write> Connection<T> {
     ///
     /// The `Done` is included in `data`, and the index of the `Done` is returned.
     pub(crate) fn read_response_onto(&mut self, data: &mut Vec<u8>) -> Result<usize> {
-        for byte in data.iter_mut() {
-            if *byte == 0x00 {
-                *byte = 0x20;
-            }
-        }
-
         let mut continue_from = None;
         let mut try_first = !data.is_empty();
         let match_tag = format!("{}{}", TAG_PREFIX, self.tag);
@@ -1647,6 +1641,12 @@ impl<T: Read + Write> Connection<T> {
         let read = self.stream.read_until(LF, into)?;
         if read == 0 {
             return Err(Error::ConnectionLost);
+        }
+
+        for byte in into.iter_mut() {
+            if *byte == 0x00 {
+                *byte = 0x20;
+            }
         }
 
         if self.debug {
